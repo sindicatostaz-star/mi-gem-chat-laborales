@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        /* ESTILOS MINIMALISTAS (Sin sombras ni márgenes) */
+        
+        /* 1. El cuerpo ocupa toda la pantalla y no tiene márgenes */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #ffffff; /* Fondo blanco simple */
+            overflow: hidden; /* Evita doble barra de scroll */
+        }
+
+        /* 2. El contenedor ocupa el 100% del espacio disponible */
+        .chat-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            /* Sin bordes redondeados ni sombras */
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        /* Cabecera simple */
+        .chat-header {
+            background: #4285f4; /* Puedes cambiar este color */
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .avatar-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: white;
+            object-fit: cover;
+        }
+
+        /* Área de mensajes */
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 85%;
+            line-height: 1.5;
+            font-size: 15px;
+            word-wrap: break-word;
+        }
+
+        .user-msg {
+            background-color: #e8f0fe;
+            color: #1967d2;
+            align-self: flex-end;
+        }
+
+        .ai-msg {
+            background-color: #f1f3f4;
+            color: #333;
+            align-self: flex-start;
+        }
+
+        /* Área de input pegada abajo */
+        .input-area {
+            border-top: 1px solid #eee;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            background: #fff;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px; /* Bordes más cuadrados y profesionales */
+            outline: none;
+            font-size: 14px;
+        }
+
+        input:focus {
+            border-color: #4285f4;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover { background: #3367d6; }
+        button:disabled { background: #ccc; }
+
+        .loading {
+            padding: 0 20px;
+            margin-bottom: 10px;
+            font-style: italic;
+            color: #888;
+            font-size: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <img src="https://www.staz.es/images/logobueno.png" alt="Bot" class="avatar-img">
+            <span>Asistente Virtual del Sindicato S.T.A.Z</span>
+        </div>
+
+        <div class="chat-box" id="chatBox">
+            <div class="message ai-msg">Hola, soy el Asistente del Acuerdo de Condiciones Laborales del Personal Funcionario del Ayuntamiento de Zaragoza, ¿en qué puedo ayudarte sobre el acuerdo?</div>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">Analizando documento...</div>
+        
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Escribe tu pregunta aquí..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()" id="sendBtn">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        
+        let conversationHistory = [];
+
+        function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user-msg');
+            userInput.value = '';
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            loadingIndicator.style.display = 'block';
+
+            conversationHistory.push({ role: "user", parts: [{ text: text }] });
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history: conversationHistory })
+                });
+
+                const data = await response.json();
+
+                if (data.candidates) {
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    addMessage(aiResponse, 'ai-msg');
+                    conversationHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                } else {
+                    addMessage("Lo siento, no pude encontrar esa información.", 'ai-msg');
+                }
+            } catch (error) {
+                addMessage("Error de conexión.", 'ai-msg');
+            } finally {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                loadingIndicator.style.display = 'none';
+                userInput.focus();
+            }
+        }
+
+        function addMessage(text, className) {
+            const div = document.createElement('div');
+            div.className = `message ${className}`;
+            div.innerText = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
