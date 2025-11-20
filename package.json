@@ -1,0 +1,8 @@
+{
+  "name": "mi-gem-chat",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node api/chat.js"
+  },
+  "dependencies": {}
+}
