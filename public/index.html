@@ -2,54 +2,53 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chat STAZ</title>
     <style>
-        /* ESTILOS MINIMALISTAS (Sin sombras ni márgenes) */
+        /* --- ESTILOS GENERALES (PC / TABLET) --- */
         
-        /* 1. El cuerpo ocupa toda la pantalla y no tiene márgenes */
         html, body {
-            height: 650px;
+            height: 100%;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #ffffff; /* Fondo blanco simple */
-            overflow: hidden; /* Evita doble barra de scroll */
+            font-family: 'Segoe UI', system-ui, sans-serif; /* system-ui usa la fuente nativa del móvil (San Francisco en iPhone, Roboto en Android) */
+            background-color: #ffffff;
+            overflow: hidden; 
         }
 
-        /* 2. El contenedor ocupa el 100% del espacio disponible */
         .chat-container {
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
             background: white;
-            /* Sin bordes redondeados ni sombras */
-            border-radius: 0;
-            box-shadow: none;
         }
 
-        /* Cabecera simple */
         .chat-header {
-            background: #4285f4; /* Puedes cambiar este color */
+            background: #4285f4;
             color: white;
             padding: 15px;
             font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             border-bottom: 1px solid #eee;
+            flex-shrink: 0; /* Evita que el encabezado se aplaste */
         }
 
         .avatar-img {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: white;
-            object-fit: cover;
+            height: 40px;
+            width: auto;
+            border-radius: 0;
+            object-fit: contain;
         }
 
-        /* Área de mensajes */
+        /* Texto del encabezado */
+        .header-title {
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
         .chat-box {
             flex: 1;
             padding: 20px;
@@ -57,12 +56,14 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            /* Scroll suave en móviles */
+            -webkit-overflow-scrolling: touch; 
         }
 
         .message {
-            padding: 10px 15px;
-            border-radius: 8px;
-            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
             line-height: 1.5;
             font-size: 15px;
             word-wrap: break-word;
@@ -72,34 +73,39 @@
             background-color: #e8f0fe;
             color: #1967d2;
             align-self: flex-end;
+            border-bottom-right-radius: 2px;
         }
 
         .ai-msg {
             background-color: #f1f3f4;
             color: #333;
             align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            white-space: pre-wrap; 
         }
 
-        /* Área de input pegada abajo */
         .input-area {
             border-top: 1px solid #eee;
             padding: 15px;
             display: flex;
             gap: 10px;
             background: #fff;
+            flex-shrink: 0; /* Evita que se colapse al abrir el teclado */
         }
 
         input {
             flex: 1;
             padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 4px; /* Bordes más cuadrados y profesionales */
+            border-radius: 25px; /* Bordes más redondeados estilo app móvil */
             outline: none;
-            font-size: 14px;
+            font-size: 16px; /* 16px ES CRUCIAL PARA EVITAR ZOOM EN IPHONE */
+            background: #f9f9f9;
         }
 
         input:focus {
             border-color: #4285f4;
+            background: #fff;
         }
 
         button {
@@ -107,9 +113,12 @@
             background: #4285f4;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 15px;
+            /* Evita que el botón se haga pequeñito */
+            flex-shrink: 0; 
         }
 
         button:hover { background: #3367d6; }
@@ -117,11 +126,44 @@
 
         .loading {
             padding: 0 20px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-style: italic;
             color: #888;
             font-size: 12px;
             display: none;
+        }
+
+        /* --- ESTILOS SOLO PARA MÓVIL (Pantallas pequeñas) --- */
+        @media (max-width: 600px) {
+            .chat-header {
+                padding: 10px 15px; /* Menos relleno vertical */
+            }
+
+            .avatar-img {
+                height: 35px; /* Logo un poco más pequeño */
+            }
+
+            .header-title {
+                font-size: 14px; /* Texto un poco más pequeño para que quepa */
+            }
+
+            .chat-box {
+                padding: 10px 15px; /* Aprovechar más el ancho */
+            }
+
+            .message {
+                max-width: 90%; /* Las burbujas ocupan más ancho */
+                font-size: 16px; /* Texto muy legible */
+                padding: 10px 14px;
+            }
+
+            .input-area {
+                padding: 10px; /* Menos margen abajo */
+            }
+
+            button {
+                padding: 10px 15px; /* Botón un poco más compacto */
+            }
         }
     </style>
 </head>
@@ -129,18 +171,18 @@
 
     <div class="chat-container">
         <div class="chat-header">
-            <img src="https://www.staz.es/images/logobueno.png" alt="Bot" class="avatar-img">
-            <span>Asistente Virtual del Sindicato S.T.A.Z</span>
+            <img src="https://www.staz.es/images/logobueno.png" alt="STAZ" class="avatar-img">
+            <span class="header-title">Asistente S.T.A.Z</span>
         </div>
 
         <div class="chat-box" id="chatBox">
-            <div class="message ai-msg">Hola, soy el Asistente del Convenio del Personal Laboral del Ayuntamiento de Zaragoza, ¿en qué puedo ayudarte sobre el acuerdo?</div>
+            <div class="message ai-msg">Hola, soy el Asistente del Convenio de Personal Laboral del Ayuntamiento de Zaragoza. ¿En qué puedo ayudarte?</div>
         </div>
         
-        <div class="loading" id="loadingIndicator">Analizando documento...</div>
+        <div class="loading" id="loadingIndicator">Consultando convenio...</div>
         
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Escribe tu pregunta aquí..." onkeypress="handleEnter(event)">
+            <input type="text" id="userInput" placeholder="Escribe aquí..." onkeypress="handleEnter(event)">
             <button onclick="sendMessage()" id="sendBtn">Enviar</button>
         </div>
     </div>
@@ -165,6 +207,9 @@
             sendBtn.disabled = true;
             loadingIndicator.style.display = 'block';
 
+            // Scroll al fondo inmediato para ver lo que escribiste
+            chatBox.scrollTop = chatBox.scrollHeight;
+
             conversationHistory.push({ role: "user", parts: [{ text: text }] });
 
             try {
@@ -181,7 +226,7 @@
                     addMessage(aiResponse, 'ai-msg');
                     conversationHistory.push({ role: "model", parts: [{ text: aiResponse }] });
                 } else {
-                    addMessage("Lo siento, no pude encontrar esa información.", 'ai-msg');
+                    addMessage("No encontré esa información en el documento.", 'ai-msg');
                 }
             } catch (error) {
                 addMessage("Error de conexión.", 'ai-msg');
@@ -190,6 +235,8 @@
                 sendBtn.disabled = false;
                 loadingIndicator.style.display = 'none';
                 userInput.focus();
+                // Scroll al fondo al recibir respuesta
+                chatBox.scrollTop = chatBox.scrollHeight;
             }
         }
 
@@ -198,7 +245,10 @@
             div.className = `message ${className}`;
             div.innerText = text;
             chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            // Pequeño retardo para asegurar que el scroll baje si hay imágenes o carga lenta
+            setTimeout(() => {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 50);
         }
     </script>
 </body>
