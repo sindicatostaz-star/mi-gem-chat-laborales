@@ -5,15 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chat STAZ</title>
     <style>
-        /* --- ESTILOS GENERALES (PC / TABLET) --- */
-        
+        /* Regla para que el botón no se corte en móviles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        /* --- ESTILOS GENERALES --- */
         html, body {
             height: 650px;
+            width: 100%;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif; /* system-ui usa la fuente nativa del móvil (San Francisco en iPhone, Roboto en Android) */
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: #ffffff;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
         .chat-container {
@@ -33,7 +38,7 @@
             align-items: center;
             gap: 12px;
             border-bottom: 1px solid #eee;
-            flex-shrink: 0; /* Evita que el encabezado se aplaste */
+            flex-shrink: 0;
         }
 
         .avatar-img {
@@ -43,7 +48,6 @@
             object-fit: contain;
         }
 
-        /* Texto del encabezado */
         .header-title {
             font-size: 16px;
             line-height: 1.2;
@@ -56,8 +60,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            /* Scroll suave en móviles */
-            -webkit-overflow-scrolling: touch; 
+            -webkit-overflow-scrolling: touch;
         }
 
         .message {
@@ -81,7 +84,7 @@
             color: #333;
             align-self: flex-start;
             border-bottom-left-radius: 2px;
-            white-space: pre-wrap; 
+            white-space: pre-wrap;
         }
 
         .input-area {
@@ -90,17 +93,19 @@
             display: flex;
             gap: 10px;
             background: #fff;
-            flex-shrink: 0; /* Evita que se colapse al abrir el teclado */
+            flex-shrink: 0;
+            width: 100%;
         }
 
         input {
             flex: 1;
             padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 25px; /* Bordes más redondeados estilo app móvil */
+            border-radius: 25px;
             outline: none;
-            font-size: 16px; /* 16px ES CRUCIAL PARA EVITAR ZOOM EN IPHONE */
+            font-size: 16px;
             background: #f9f9f9;
+            min-width: 0;
         }
 
         input:focus {
@@ -117,8 +122,8 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 15px;
-            /* Evita que el botón se haga pequeñito */
-            flex-shrink: 0; 
+            flex-shrink: 0;
+            white-space: nowrap;
         }
 
         button:hover { background: #3367d6; }
@@ -133,42 +138,20 @@
             display: none;
         }
 
-        /* --- ESTILOS SOLO PARA MÓVIL (Pantallas pequeñas) --- */
+        /* --- ESTILOS MÓVIL --- */
         @media (max-width: 600px) {
-            .chat-header {
-                padding: 10px 15px; /* Menos relleno vertical */
-            }
-
-            .avatar-img {
-                height: 35px; /* Logo un poco más pequeño */
-            }
-
-            .header-title {
-                font-size: 14px; /* Texto un poco más pequeño para que quepa */
-            }
-
-            .chat-box {
-                padding: 10px 15px; /* Aprovechar más el ancho */
-            }
-
-            .message {
-                max-width: 90%; /* Las burbujas ocupan más ancho */
-                font-size: 16px; /* Texto muy legible */
-                padding: 10px 14px;
-            }
-
-            .input-area {
-                padding: 10px; /* Menos margen abajo */
-            }
-
-            button {
-                padding: 10px 15px; /* Botón un poco más compacto */
-            }
+            .chat-header { padding: 10px 12px; }
+            .avatar-img { height: 32px; }
+            .header-title { font-size: 14px; }
+            .chat-box { padding: 10px 12px; }
+            .message { max-width: 88%; padding: 10px 14px; }
+            .input-area { padding: 8px 10px; gap: 8px; }
+            input { padding: 10px 12px; }
+            button { padding: 10px 16px; }
         }
     </style>
 </head>
 <body>
-
     <div class="chat-container">
         <div class="chat-header">
             <img src="https://www.staz.es/images/logobueno.png" alt="STAZ" class="avatar-img">
@@ -206,9 +189,8 @@
             userInput.disabled = true;
             sendBtn.disabled = true;
             loadingIndicator.style.display = 'block';
-
-            // Scroll al fondo inmediato para ver lo que escribiste
-            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 10);
 
             conversationHistory.push({ role: "user", parts: [{ text: text }] });
 
@@ -235,8 +217,7 @@
                 sendBtn.disabled = false;
                 loadingIndicator.style.display = 'none';
                 userInput.focus();
-                // Scroll al fondo al recibir respuesta
-                chatBox.scrollTop = chatBox.scrollHeight;
+                setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 10);
             }
         }
 
@@ -245,10 +226,7 @@
             div.className = `message ${className}`;
             div.innerText = text;
             chatBox.appendChild(div);
-            // Pequeño retardo para asegurar que el scroll baje si hay imágenes o carga lenta
-            setTimeout(() => {
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 50);
+            setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 10);
         }
     </script>
 </body>
