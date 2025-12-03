@@ -11,8 +11,8 @@ export default async function handler(req, res) {
     
     // CONFIGURACIÓN:
     // Asegúrate de que este nombre es EXACTO (mayúsculas/minúsculas importan en Vercel)
-    const misArchivos = ['acuerdocongrados.pdf']; 
-    const modelName = "gemini-2.0-flash";
+    const misArchivos = ['Acuerdocongrados.pdf']; 
+    const modelName = "gemini-2.5-pro-preview-03-25";
 
     const { history } = req.body;
 
@@ -62,9 +62,10 @@ export default async function handler(req, res) {
 
         // 2. PREPARAR PROMPT
         const SYSTEM_PROMPT = `
-        Eres el Asistente del Sindicato STAZ.
-        Responde basándote EXCLUSIVAMENTE en el documento PDF adjunto.
-        Si la respuesta no está en el PDF, di: "Esa información no aparece en el acuerdo."
+        Eres un asistente experto de STAZ.
+        Tienes acceso a varios documentos PDF adjuntos.
+        Responde a las preguntas del usuario consultando TODOS los documentos proporcionados.
+        Si la información está en uno de ellos, úsala.
         `;
 
         parts.push({ text: SYSTEM_PROMPT });
