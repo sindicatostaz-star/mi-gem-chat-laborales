@@ -184,7 +184,9 @@
             const text = userInput.value.trim();
             if (!text) return;
 
+            // Mensaje del usuario (texto plano)
             addMessage(text, 'user-msg');
+            
             userInput.value = '';
             userInput.disabled = true;
             sendBtn.disabled = true;
@@ -205,7 +207,8 @@
 
                 if (data.candidates) {
                     const aiResponse = data.candidates[0].content.parts[0].text;
-                    addMessage(aiResponse, 'ai-msg');
+                    // AQUÍ ES DONDE AHORA USAMOS LA FUNCIÓN DE FORMATEO
+                    addMessage(aiResponse, 'ai-msg', true); 
                     conversationHistory.push({ role: "model", parts: [{ text: aiResponse }] });
                 } else {
                     addMessage("No encontré esa información en el documento.", 'ai-msg');
@@ -221,10 +224,34 @@
             }
         }
 
-        function addMessage(text, className) {
+        // --- FUNCIÓN NUEVA: CONVERTIR ASTERISCOS EN NEGRITA ---
+        function formatText(text) {
+            let html = text
+                // 1. Evitar que se rompa el HTML si hay símbolos < o >
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                // 2. Convertir **texto** en negrita
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // 3. Convertir *texto* en cursiva
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // 4. Convertir listas (* al inicio) en puntos •
+                .replace(/^\s*\*\s/gm, '• ');
+            
+            return html;
+        }
+
+        // --- FUNCIÓN MODIFICADA PARA ACEPTAR HTML ---
+        function addMessage(text, className, isHTML = false) {
             const div = document.createElement('div');
             div.className = `message ${className}`;
-            div.innerText = text;
+            
+            if (isHTML) {
+                // Si es mensaje de la IA, usamos el formateador
+                div.innerHTML = formatText(text);
+            } else {
+                // Si es mensaje del usuario, texto plano
+                div.innerText = text;
+            }
+            
             chatBox.appendChild(div);
             setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 10);
         }
