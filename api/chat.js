@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : "";
     
     // --- CONFIGURACIÓN ---
-    const pdfName = 'acuerdocongrados.pdf'; // ASEGÚRATE QUE EN GITHUB SE LLAMA IGUAL
+    const pdfName = 'Acuerdocongrados.pdf'; // ASEGÚRATE QUE EN GITHUB SE LLAMA IGUAL
     const modelName = "gemini-2.5-flash";
     // ---------------------
 
