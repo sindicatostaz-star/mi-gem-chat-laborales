@@ -8,79 +8,90 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : "";
-    if (!apiKey) {
-        return res.status(500).json({ error: "API Key no encontrada" });
-    }
+    
+    // CONFIGURACIÓN:
+    // Asegúrate de que este nombre es EXACTO (mayúsculas/minúsculas importan en Vercel)
+    const misArchivos = ['acuerdocongrados.pdf']; 
+    const modelName = "gemini-2.0-flash";
 
     const { history } = req.body;
 
-    // 1. INSTRUCCIONES DE PERSONALIDAD
-    const SYSTEM_PROMPT = `
-    Eres un asistente experto, educado y profesional.
-    Tienes acceso a un documento PDF adjunto llamado "Acuerdo con Grados".
-    Responde a las preguntas del usuario basándote ÚNICAMENTE en la información de ese PDF.
-    Si la respuesta no está en el documento, indícalo amablemente.
-    `;
-
     try {
-        // 2. LEER EL ARCHIVO 'acuerdocongrados.pdf'
-        // --- CAMBIO AQUÍ ---
-        const fileName = 'Acuerdocongrados.pdf';
-        const filePath = path.join(process.cwd(), 'api', fileName);
-        
-        // Leemos el archivo y lo convertimos a Base64
-        const fileBuffer = fs.readFileSync(filePath);
-        const base64Data = fileBuffer.toString('base64');
-
-        // 3. PREPARAR EL MENSAJE
         let parts = [];
+        let archivosEncontrados = 0;
 
-        // Añadimos el PDF al contexto
-        parts.push({
-            inline_data: {
-                mime_type: "application/pdf",
-                data: base64Data
+        // 1. INTENTO DE LEER ARCHIVOS CON RASTREO DE RUTA
+        console.log("--- INICIO DIAGNÓSTICO ---");
+        console.log("Directorio actual (cwd):", process.cwd());
+
+        for (const fileName of misArchivos) {
+            // Vercel a veces mueve los archivos. Probamos 2 rutas posibles:
+            const ruta1 = path.join(process.cwd(), 'api', fileName);
+            const ruta2 = path.join(process.cwd(), fileName); // A veces están en la raíz
+
+            let filePathFinal = null;
+            
+            if (fs.existsSync(ruta1)) {
+                filePathFinal = ruta1;
+            } else if (fs.existsSync(ruta2)) {
+                filePathFinal = ruta2;
             }
-        });
-        
-        // Añadimos las instrucciones
-        parts.push({ text: SYSTEM_PROMPT });
 
-        // Añadimos la última pregunta del usuario
+            if (filePathFinal) {
+                console.log(`✅ Archivo encontrado en: ${filePathFinal}`);
+                const fileBuffer = fs.readFileSync(filePathFinal);
+                parts.push({
+                    inline_data: {
+                        mime_type: "application/pdf",
+                        data: fileBuffer.toString('base64')
+                    }
+                });
+                archivosEncontrados++;
+            } else {
+                console.error(`❌ ERROR CRÍTICO: No encuentro el archivo '${fileName}' en ninguna ruta.`);
+                console.error(`Busqué en: ${ruta1} Y TAMBIÉN EN: ${ruta2}`);
+            }
+        }
+
+        if (archivosEncontrados === 0) {
+            // Si no encontró el PDF, devolvemos el error al chat para que lo veas
+            return res.status(500).json({ 
+                error: `ERROR DE ARCHIVO: No encontré '${misArchivos[0]}' en el servidor. Revisa mayúsculas/minúsculas.` 
+            });
+        }
+
+        // 2. PREPARAR PROMPT
+        const SYSTEM_PROMPT = `
+        Eres el Asistente del Sindicato STAZ.
+        Responde basándote EXCLUSIVAMENTE en el documento PDF adjunto.
+        Si la respuesta no está en el PDF, di: "Esa información no aparece en el acuerdo."
+        `;
+
+        parts.push({ text: SYSTEM_PROMPT });
         const lastUserMessage = history[history.length - 1].parts[0].text;
         parts.push({ text: "Pregunta del usuario: " + lastUserMessage });
 
-        // 4. ENVIAR A GOOGLE (Modelo Gemini 2.0 Flash)
-        const modelName = "gemini-2.5-pro-preview-03-25"; 
+        // 3. LLAMADA A GOOGLE
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
-        const payload = {
-            contents: [
-                {
-                    role: "user",
-                    parts: parts 
-                }
-            ]
-        };
 
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ contents: [{ role: "user", parts: parts }] })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
             console.error("Error Google:", JSON.stringify(data));
-            return res.status(response.status).json(data);
+            return res.status(response.status).json({ error: "Error de Google: " + (data.error?.message || "Desconocido") });
         }
 
+        console.log("✅ Google respondió correctamente");
         res.status(200).json(data);
 
     } catch (error) {
-        console.error("Error:", error);
-        // Mensaje de error útil por si el archivo no está bien puesto
-        res.status(500).json({ error: `No pude leer el archivo ${fileName}. Asegúrate de que está en la carpeta 'api/'` });
+        console.error("Error del Servidor:", error);
+        res.status(500).json({ error: "Error interno del servidor: " + error.message });
     }
 }
